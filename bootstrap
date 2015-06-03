@@ -1,0 +1,41 @@
+#!/bin/bash
+
+set -e
+set -o pipefail
+
+echo "Getting go dependencies..."
+echo ""
+
+go get github.com/abeconnelly/autoio
+go get github.com/abeconnelly/sloppyjson
+go get github.com/codegangsta/cli
+
+echo "Compiling..."
+echo ""
+
+cd src
+go build fjfilter.go
+go build create_tile_graph.go
+go build fj2allele.go
+go build tileset2fj.go
+cd ..
+
+export PATH="$PATH:"`pwd`/src
+
+echo "Generating data..."
+echo ""
+
+./scripts/gen_pgp174.sh
+./scripts/gen_allele_path_pgp174.sh
+
+echo "Generating database..."
+echo ""
+
+cd db
+
+./generate_tilegraph_db.sh
+
+cd ..
+
+echo ""
+echo "Finished"
