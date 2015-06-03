@@ -41,6 +41,23 @@ $ ./bootstrap
 
 Assuming everything went well, the final SQLite database file should be located in `db/tilegraph.sqlite3`.
 
+Visualization
+----
+
+There is a [live demo](http://lightning-dev2.curoverse.com/light-graph-path-v0.2.0/) of a visualization for our graph representation.  Please be patient as the load can take a while.  Backing it is a portion of the SQLite database loaded into the browser with an HTML5 canvas for rendering.
+
+Below are some screenshots:
+
+![tile](img/spanning2.png)
+
+![tile closeup](img/spanning_closeup.png)
+
+  - **left mouse drag** to pan
+  - **middle mouse wheel** to zoom
+
+Purple boxes are 'tags' (24mer unique sequences) and blue boxes are 'body' tiles.  If you zoom in you can see the FASTA sequences making up the paths.  The dropdown in the upper left hand corner allows for selecting individual sample paths through the graph.
+
+Code for the visualization resides in the `lightning_graph_viz` directory.
 
 License
 ---
