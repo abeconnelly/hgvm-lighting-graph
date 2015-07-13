@@ -18,7 +18,9 @@ do
   opt="$opt -i ${nam}_2c5,<( fjfilter -i <(zcat $d) -s 2c5.00.3cd -e 2c5.00.52c )"
 done
 
-cmd=" ./src/fj2allele $opt -progress -sequence out-data/pgp174_2c5.seq -allele out-data/pgp174_2c5.allele -allele-path out-data/pgp174_2c5.allelepath  -allele-call out-data/pgp174_2c5.allelecall -callset out-data/pgp174_2c5.callset"
+starts=" -start-allele-id 0 -start-callset-id 0 -start-variantset-id 0"
+
+cmd=" ./src/fj2allele $opt -progress -sequence out-data/pgp174_2c5.seq -allele out-data/pgp174_2c5.allele -allele-path out-data/pgp174_2c5.allelepath  -allele-call out-data/pgp174_2c5.allelecall -callset out-data/pgp174_2c5.callset -variantset out-data/pgp174_2c5.variantset -variantset-callset-join out-data/pgp174_2c5.variantset-callset-join -variantset-name brca1 $starts"
 echo ">>>> $cmd"
 bash -c " $cmd "
 
@@ -35,9 +37,9 @@ do
   opt="$opt -i ${nam}_247,<( fjfilter -i <(zcat $d) -s 247.00.abb -e 247.00.c20 )"
 done
 
-starts=" -start-allele-id 100000 -start-callset-id 1000000"
+starts=" -start-allele-id 100000 -start-callset-id 1000000 -start-variantset-id 1"
 
-cmd=" ./src/fj2allele $opt -progress -sequence out-data/pgp174_247.seq -allele out-data/pgp174_247.allele -allele-path out-data/pgp174_247.allelepath  -allele-call out-data/pgp174_247.allelecall -callset out-data/pgp174_247.callset $starts "
+cmd=" ./src/fj2allele $opt -progress -sequence out-data/pgp174_247.seq -allele out-data/pgp174_247.allele -allele-path out-data/pgp174_247.allelepath  -allele-call out-data/pgp174_247.allelecall -callset out-data/pgp174_247.callset -variantset out-data/pgp174_247.variantset -variantset-callset-join out-data/pgp174_247.variantset-callset-join -variantset-name brca2 $starts "
 echo ">>>> $cmd"
 bash -c " $cmd "
 
@@ -47,3 +49,5 @@ cat out-data/pgp174_247.allele out-data/pgp174_2c5.allele > out-data/pgp174.alle
 cat out-data/pgp174_247.allelepath out-data/pgp174_2c5.allelepath > out-data/pgp174.allelepath
 cat out-data/pgp174_247.allelecall out-data/pgp174_2c5.allelecall > out-data/pgp174.allelecall
 cat out-data/pgp174_247.callset out-data/pgp174_2c5.callset > out-data/pgp174.callset
+cat out-data/pgp174_247.variantset out-data/pgp174_2c5.variantset > out-data/pgp174.variantset
+cat out-data/pgp174_247.variantset-callset-join out-data/pgp174_2c5.variantset-callset-join > out-data/pgp174.variantset-callset-join

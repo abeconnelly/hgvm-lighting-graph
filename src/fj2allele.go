@@ -111,8 +111,17 @@ type AlleleCall struct {
   Ploidy int
 }
 
+type VariantSet struct {
+  Id int
+  Name string
+  ReferenceSetId int
+}
+
 var g_ALLELE_ID int
 var g_START_CALLSET_ID int
+var g_START_VARIANTSET_ID int
+
+var g_VARIANTSET_NAME string
 
 // named sample as key
 //
@@ -133,6 +142,8 @@ var g_allele_path_item map[string][]AllelePathItem
 //
 var g_allele_call map[string]AlleleCall
 
+var g_variantset map[string]VariantSet
+
 func md5sum_str(seq string) string {
   ta := make([]string, 0, 32)
   s := md5.Sum([]byte(seq))
@@ -149,6 +160,7 @@ func init() {
   g_callsetname_to_sampleid = make(map[string]string)
   g_callsetname_to_id = make(map[string]int64)
 
+  g_variantset        = make(map[string]VariantSet)
   g_callset           = make(map[string]CallSet)
   g_allele            = make(map[string]Allele)
   g_allele_path_item  = make(map[string][]AllelePathItem)
@@ -217,7 +229,7 @@ func import_fastj(name, fn string) error {
 
         callset_id := g_callset[name].Id
         ploidy := 1
-        variant_set_id := -1
+        variant_set_id := g_START_VARIANTSET_ID
 
         g_allele[allele_name_id] = Allele{ g_ALLELE_ID, variant_set_id, allele_name_id, 0 }
         g_allele_path_item[allele_name_id] = make([]AllelePathItem, 0, 1024)
@@ -240,7 +252,6 @@ func import_fastj(name, fn string) error {
         var ok bool
         var seqid int64
 
-        //allele_name := fmt.Sprintf("%d", prev_tile_allele)
         allele_id := g_allele[prev_allele_name_id].Id
         allele_path := g_allele_path_item[prev_allele_name_id]
         cur_idx := len(allele_path)
@@ -251,16 +262,8 @@ func import_fastj(name, fn string) error {
           log.Fatal(fmt.Sprintf("ERROR: could not find tag '%s' (%s) in Sequence map", pfx_tag, pfx_md5))
         }
 
-        //fmt.Printf("t,%s,%d,%d\n", pfx_md5, seqid, prev_tile_allele)
-
-        // Only add the prefix tag if it's the first one in the AllelePathItem
-        //
-        //if _,ok := g_allele_sequenceid_path[allele_name] ; !ok {
-        //  g_allele_sequenceid_path[allele_name] = append(g_allele_sequenceid_path[allele_name], seqid)
-        //}
-
         if cur_idx==0 {
-          allele_path = append(allele_path, AllelePathItem{allele_id, cur_idx, int(seqid), 0, -1, "'TRUE'"})
+          allele_path = append(allele_path, AllelePathItem{allele_id, cur_idx, int(seqid), 0, 24, "'TRUE'"})
           cur_idx++
         }
 
@@ -269,9 +272,7 @@ func import_fastj(name, fn string) error {
           log.Fatal(fmt.Sprintf("ERROR: could not find body (%s) in Sequence map", body_md5))
         }
 
-        //fmt.Printf("b,%s,%d,%d\n", body_md5, seqid, prev_tile_allele)
-        //g_allele_sequenceid_path[allele_name] = append(g_allele_sequenceid_path[allele_name], seqid)
-        allele_path = append(allele_path, AllelePathItem{allele_id, cur_idx, int(seqid), 0, -1, "'TRUE'"})
+        allele_path = append(allele_path, AllelePathItem{allele_id, cur_idx, int(seqid), 0, len(body_seq), "'TRUE'"})
         cur_idx++
 
         sfx_md5 := md5sum_str(sfx_tag)
@@ -279,9 +280,7 @@ func import_fastj(name, fn string) error {
           log.Fatal(fmt.Sprintf("ERROR: could not find tag '%s' (%s) in Sequence map", sfx_tag, sfx_md5))
         }
 
-        //fmt.Printf("t,%s,%d,%d\n", sfx_md5, seqid, prev_tile_allele)
-        //g_allele_sequenceid_path[allele_name] = append(g_allele_sequenceid_path[allele_name], seqid)
-        allele_path = append(allele_path, AllelePathItem{allele_id, cur_idx, int(seqid), 0, -1, "'TRUE'"})
+        allele_path = append(allele_path, AllelePathItem{allele_id, cur_idx, int(seqid), 0, 24, "'TRUE'"})
         cur_idx++
 
         g_allele_path_item[prev_allele_name_id] = allele_path
@@ -321,7 +320,6 @@ func import_fastj(name, fn string) error {
 
     var ok bool
     var seqid int64
-    //allele_name := fmt.Sprintf("%d", prev_tile_allele)
 
     pfx_md5 := md5sum_str(pfx_tag)
     if seqid,ok = g_md5_seqid_map[pfx_md5] ; !ok {
@@ -336,7 +334,7 @@ func import_fastj(name, fn string) error {
     cur_idx := len(allele_path)
 
     if cur_idx==0 {
-      allele_path = append(allele_path, AllelePathItem{allele_id, cur_idx, int(seqid), 0, -1, "'TRUE'"} )
+      allele_path = append(allele_path, AllelePathItem{allele_id, cur_idx, int(seqid), 0, 24, "'TRUE'"} )
       cur_idx++
     }
 
@@ -346,11 +344,8 @@ func import_fastj(name, fn string) error {
       log.Fatal(fmt.Sprintf("ERROR: could not find body (%s) in Sequence map", body_md5))
     }
 
-    //fmt.Printf("b,%s,%d,%d\n", body_md5, seqid, prev_tile_allele)
-    //g_allele_sequenceid_path[allele_name] = append(g_allele_sequenceid_path[allele_name], seqid)
-    allele_path = append(allele_path, AllelePathItem{allele_id, cur_idx, int(seqid), 0, -1, "'TRUE'"} )
+    allele_path = append(allele_path, AllelePathItem{allele_id, cur_idx, int(seqid), 0, len(body_seq), "'TRUE'"} )
     cur_idx++
-
 
 
     sfx_md5 := md5sum_str(sfx_tag)
@@ -358,9 +353,7 @@ func import_fastj(name, fn string) error {
       log.Fatal(fmt.Sprintf("ERROR: could not find tag '%s' (%s) in Sequence map", sfx_tag, sfx_md5))
     }
 
-    //fmt.Printf("t,%s,%d,%d\n", sfx_md5, seqid, prev_tile_allele)
-    //g_allele_sequenceid_path[allele_name] = append(g_allele_sequenceid_path[allele_name], seqid)
-    allele_path = append(allele_path, AllelePathItem{allele_id, cur_idx, int(seqid), 0, -1, "'TRUE'"} )
+    allele_path = append(allele_path, AllelePathItem{allele_id, cur_idx, int(seqid), 0, 24, "'TRUE'"} )
     cur_idx++
 
     g_allele_path_item[prev_allele_name_id] = allele_path
@@ -484,6 +477,25 @@ func emit_callset(ofp *bufio.Writer) {
   }
 }
 
+func emit_variantset_callset_join(ofp *bufio.Writer) {
+  for cs_id := range g_callset {
+    s:=fmt.Sprintf("%d,%d\n", g_callset[cs_id].Id, g_START_VARIANTSET_ID)
+    ofp.Write([]byte(s))
+  }
+}
+
+func add_variantset(id int, name string) int {
+  g_variantset[name] = VariantSet{id, name, -1}
+  return id+1
+}
+
+func emit_variantset(ofp *bufio.Writer) {
+  for v_id := range g_variantset {
+    s:=fmt.Sprintf("%d,%s,%d\n", g_variantset[v_id].Id, g_variantset[v_id].Name, g_variantset[v_id].ReferenceSetId)
+    ofp.Write([]byte(s))
+  }
+}
+
 
 func _main( c *cli.Context ) {
   sequence_ifn  := c.String("sequence")
@@ -491,6 +503,8 @@ func _main( c *cli.Context ) {
 
   g_ALLELE_ID = c.Int("start-allele-id")
   g_START_CALLSET_ID = c.Int("start-callset-id")
+  g_START_VARIANTSET_ID = c.Int("start-variantset-id")
+  g_VARIANTSET_NAME = c.String("variantset-name")
 
   ifns := c.StringSlice("input")
   if len(ifns)==0 { cli.ShowAppHelp(c) }
@@ -526,6 +540,9 @@ func _main( c *cli.Context ) {
   allele_path_item_ofn  := c.String("allele-path")
   callset_ofn           := c.String("callset")
   allele_call_ofn       := c.String("allele-call")
+  variantset_ofn        := c.String("variantset")
+  variantset_callset_ofn  := c.String("variantset-callset-join")
+
 
   allele_out,err := autoio.CreateWriter( allele_ofn )
   if err!=nil { fmt.Fprintf(os.Stderr, "%v", err); os.Exit(1) }
@@ -543,7 +560,19 @@ func _main( c *cli.Context ) {
   if err!=nil { fmt.Fprintf(os.Stderr, "%v", err); os.Exit(1) }
   defer func() { allele_call_out.Flush(); allele_call_out.Close() }()
 
+  variantset_out,err := autoio.CreateWriter( variantset_ofn )
+  if err!=nil { fmt.Fprintf(os.Stderr, "%v", err); os.Exit(1) }
+  defer func() { variantset_out.Flush(); variantset_out.Close() }()
+
+  variantset_callset_out,err := autoio.CreateWriter( variantset_callset_ofn )
+  if err!=nil { fmt.Fprintf(os.Stderr, "%v", err); os.Exit(1) }
+  defer func() { variantset_callset_out.Flush(); variantset_callset_out.Close() }()
+
   show_progress_flag := c.Bool("progress")
+
+  // We only use one variant set
+  //
+  add_variantset(g_START_VARIANTSET_ID, g_VARIANTSET_NAME)
 
 
   // Process Sequence CSV file
@@ -581,9 +610,16 @@ func _main( c *cli.Context ) {
     if e!=nil { log.Fatal(e) }
   }
 
+  // Variant Sets
+  //
+  emit_variantset(variantset_out.Writer)
+
+
   // Output the CallSet
   //
   emit_callset(callset_out.Writer)
+
+  emit_variantset_callset_join(variantset_callset_out.Writer)
 
   // Output Allele information
   //
@@ -650,6 +686,24 @@ func main() {
       Usage: "AlleleCall CSV OUTPUT",
     },
 
+    cli.StringFlag{
+      Name: "variantset",
+      Value: "out.variantset",
+      Usage: "VariantSet CSV OUTPUT",
+    },
+
+    cli.StringFlag{
+      Name: "variantset-callset-join",
+      Value: "out.variantset-callset",
+      Usage: "VariantSet_CallSet_Join CSV OUTPUT",
+    },
+
+    cli.StringFlag{
+      Name: "variantset-name",
+      Value: "none",
+      Usage: "VariantSet Name",
+    },
+
     cli.IntFlag{
       Name: "start-allele-id",
       Value: 1,
@@ -660,6 +714,12 @@ func main() {
       Name: "start-callset-id",
       Value: 1,
       Usage: "Start CallSet ID",
+    },
+
+    cli.IntFlag{
+      Name: "start-variantset-id",
+      Value: 1,
+      Usage: "Start VariantSet ID",
     },
 
     cli.IntFlag{

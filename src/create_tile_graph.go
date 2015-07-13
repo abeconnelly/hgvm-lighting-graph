@@ -75,6 +75,7 @@ var g_show_progress bool
 var g_FASTAID int
 var g_START_SEQUENCEID int
 var g_START_GRAPHJOINID int
+var g_VARIANTSETID int
 
 type TileInfo struct {
   Md5Sum string
@@ -445,7 +446,12 @@ func emit_sequences(ofp *bufio.Writer) {
 
 }
 
+var g_graphjoin_id_list []int
+
 func emit_graphjoin(ofp *bufio.Writer) {
+
+  g_graphjoin_id_list = make([]int,0,1024)
+
   //gj_id := 1
   gj_id := g_START_GRAPHJOINID
 
@@ -492,6 +498,9 @@ func emit_graphjoin(ofp *bufio.Writer) {
           l:=fmt.Sprintf("%d,%d,%d,'TRUE',%d,%d,'FALSE'\n", gj_id, body_seq_id, len(tile_seq)-49, pfx_seq_id, 23)
           ofp.Write([]byte(l))
         }
+
+        g_graphjoin_id_list = append(g_graphjoin_id_list, gj_id)
+
         gj_id++
         seen_hash[key]=true
       }
@@ -505,6 +514,9 @@ func emit_graphjoin(ofp *bufio.Writer) {
           l:=fmt.Sprintf("%d,%d,%d,'FALSE',%d,%d,'TRUE'\n", gj_id, sfx_seq_id, 23, body_seq_id, len(tile_seq)-49)
           ofp.Write([]byte(l))
         }
+
+        g_graphjoin_id_list = append(g_graphjoin_id_list, gj_id)
+
         gj_id++
         seen_hash[key]=true
       }
@@ -512,6 +524,13 @@ func emit_graphjoin(ofp *bufio.Writer) {
     }
   }
 
+}
+
+func emit_graphjoin_variantset(ofp *bufio.Writer) {
+  for i:=0; i<len(g_graphjoin_id_list); i++ {
+    l := fmt.Sprintf("%d,%d\n", g_graphjoin_id_list[i], g_VARIANTSETID)
+    ofp.Write([]byte(l))
+  }
 }
 
 var path_step_order []string
@@ -559,6 +578,7 @@ func _main( c *cli.Context ) {
   g_START_SEQUENCEID = c.Int("start-sequence-id")
   g_START_GRAPHJOINID = c.Int("start-graphjoin-id")
   g_FASTAID = c.Int("fasta-id")
+  g_VARIANTSETID = c.Int("variantset-id")
 
   if c.Bool( "pprof" ) {
     gProfileFlag = true
@@ -593,34 +613,27 @@ func _main( c *cli.Context ) {
   sequence_ofn  := c.String("sequence")
   graphjoin_ofn := c.String("graphjoin")
   fasta_csv_ofn := c.String("fasta-csv")
+  graphjoin_variantset_ofn := c.String("graphjoin-variantset")
 
   fasta_out,err := autoio.CreateWriter( fasta_ofn )
-  if err!=nil {
-    fmt.Fprintf(os.Stderr, "%v", err)
-    os.Exit(1)
-  }
+  if err!=nil { fmt.Fprintf(os.Stderr, "%v", err) ; os.Exit(1) }
   defer func() { fasta_out.Flush() ; fasta_out.Close() }()
 
   fasta_csv_out,err := autoio.CreateWriter( fasta_csv_ofn )
-  if err!=nil {
-    fmt.Fprintf(os.Stderr, "%v", err)
-    os.Exit(1)
-  }
+  if err!=nil { fmt.Fprintf(os.Stderr, "%v", err) ; os.Exit(1) }
   defer func() { fasta_csv_out.Flush() ; fasta_csv_out.Close() }()
 
   seq_out,err := autoio.CreateWriter( sequence_ofn )
-  if err!=nil {
-    fmt.Fprintf(os.Stderr, "%v", err)
-    os.Exit(1)
-  }
+  if err!=nil { fmt.Fprintf(os.Stderr, "%v", err) ; os.Exit(1) }
   defer func() { seq_out.Flush() ; seq_out.Close() }()
 
   gj_out,err := autoio.CreateWriter( graphjoin_ofn )
-  if err!=nil {
-    fmt.Fprintf(os.Stderr, "%v", err)
-    os.Exit(1)
-  }
+  if err!=nil { fmt.Fprintf(os.Stderr, "%v", err) ; os.Exit(1) }
   defer func() { gj_out.Flush() ; gj_out.Close() }()
+
+  vs_gj_out,err := autoio.CreateWriter( graphjoin_variantset_ofn )
+  if err!=nil { fmt.Fprintf(os.Stderr, "%v", err) ; os.Exit(1) }
+  defer func() { vs_gj_out.Flush() ; vs_gj_out.Close() }()
 
 
   // Process input FastJ files
@@ -669,7 +682,7 @@ func _main( c *cli.Context ) {
   //
   emit_graphjoin(gj_out.Writer)
 
-  //dump_raw(fasta_out)
+  emit_graphjoin_variantset(vs_gj_out.Writer)
 
 }
 
@@ -714,6 +727,12 @@ func main() {
       Usage: "GraphJoin OUTPUT",
     },
 
+    cli.StringFlag{
+      Name: "graphjoin-variantset",
+      Value: "out.graphjoin-variantset",
+      Usage: "GraphJoin_VariantSet_Join OUTPUT",
+    },
+
     cli.IntFlag{
       Name: "max-procs, N",
       Value: -1,
@@ -736,6 +755,12 @@ func main() {
       Name: "start-graphjoin-id",
       Value: 1,
       Usage: "Start ID of GraphJoin SQL row",
+    },
+
+    cli.IntFlag{
+      Name: "variantset-id",
+      Value: 0,
+      Usage: "ID of VariantSet SQL row",
     },
 
     cli.BoolFlag{
