@@ -13,13 +13,14 @@ var g_painter = null;
 var g_canvas = "canvas";
 var g_context = null;
 
-var g_fa_text = null
-var g_fa_array = [];
+//var g_fa_text = null
+//var g_fa_array = [];
 var g_sequence = {};
 
 var g_controller = null;
 var g_model = null;
 var g_db = null;
+var g_db_cache = {};
 
 
 
@@ -54,14 +55,20 @@ function loop() {
   requestAnimationFrame( loop, 1 );
 }
 
+var g_loci_name = "BRCA1";
+
 function sample_deselect() {
   g_model.unhighlight_sample();
-  g_controller.display_text = "brca1";
+  g_controller.display_text = g_loci_name;
 }
 
 function sample_select(sample_name) {
   g_model.highlight_sample(sample_name);
-  g_controller.display_text = "brca1 / " + sample_name;
+  g_controller.display_text = g_loci_name + " / " + sample_name;
+}
+
+function loci_select(loci_name) {
+  g_loci_name = loci_name;
 }
 
 $(document).ready( function() {
@@ -104,55 +111,136 @@ $(document).ready( function() {
     g_controller.resize(w,h);
   });
 
+  // Have dropdown button get value of selection.
+  //
+  $("#dropdown-loci-list li a").click(function() {
+    var loci_name = $(this).text();
 
+    g_db = g_db_cache[loci_name];
+
+    if (loci_name == "BRCA1") {
+      g_model.shift_step = 2746;
+      g_model.path = "247";
+    } else if (loci_name == "BRCA2") {
+      g_model.shift_step = 972;
+      g_model.path = "2c5";
+    }
+
+    g_model.init();
+
+    $("#dropdown-sample-list").empty();
+    $("#dropdown-sample-list").append('<li role="presentation"><a role="menuitem" tabindex="-1" href="#" onclick="sample_deselect();"; >None</a></li>');
+    for (var sample_name in g_model.call_set) {
+      $("#dropdown-sample-list").append('<li role="presentation">' +
+          '<a role="menuitem" tabindex="-1" href="#" onclick="sample_select(' + "'" + sample_name + "'" + ');"  >' +
+          sample_name + '</a></li>');
+    }
+
+    $("#sample_main_text").text("None");
+    $("#sample_main_text").val("None");
+    sample_deselect();
+
+    // This needs to happen after the dropdown list has been created
+    //
+    $("#dropdown-sample-list li a").click(function() {
+      $("#sample_main_text").text( $(this).text() );
+      $("#sample_main_text").val( $(this).text() );
+    });
+
+
+    $("#loci_main_text").text(loci_name);
+    $("#loci_main_text").val(loci_name);
+
+  });
+
+
+  // Grab BRCA1 database
+  //
   var xhr = new XMLHttpRequest();
-  xhr.open('GET', 'db/tilegraph.sqlite3', true);
+  xhr.open('GET', 'db/tilegraph_247.sqlite3', true);
   xhr.responseType = 'arraybuffer';
-
   xhr.onload = function(e) {
-    console.log(">>>ok", e);
+
+    var uInt8Array = new Uint8Array(this.response);
+    g_db_cache["BRCA1"] = new SQL.Database(uInt8Array);
+
+    var ele = document.getElementById("dropdown-sample-list");
+    for (var sample_name in g_model.call_set) {
+      $("#dropdown-sample-list").append('<li role="presentation">' +
+          '<a role="menuitem" tabindex="-1" href="#" onclick="sample_select(' + "'" + sample_name + "'" + ');"  >' +
+          sample_name + '</a></li>');
+    }
+
+    // Have dropdown button get value of selection.
+    // This needs to happen after the dropdown list has been created
+    //
+    $("#dropdown-sample-list li a").click(function() {
+      $("#sample_main_text").text( $(this).text() );
+      $("#sample_main_text").val( $(this).text() );
+    });
+
+  };
+  xhr.send();
+
+  // Grab BRCA2 database
+  //
+  var xhr2 = new XMLHttpRequest();
+  xhr2.open('GET', 'db/tilegraph_2c5.sqlite3', true);
+  xhr2.responseType = 'arraybuffer';
+  xhr2.onload = function(e) {
 
     var uInt8Array = new Uint8Array(this.response);
     g_db = new SQL.Database(uInt8Array);
+    g_db_cache["BRCA2"] = g_db;
 
-    console.log(">>> database loaded....", g_db);
-
-    console.log("loading lightningGraph...");
+    g_model.shift_step = 972;
+    g_model.path = "247";
     g_model.init();
 
     var ele = document.getElementById("dropdown-sample-list");
     for (var sample_name in g_model.call_set) {
       $("#dropdown-sample-list").append('<li role="presentation">' +
-          //'<a role="menuitem" tabindex="-1" href="#" onclick="g_model.highlight_sample(' + "'" + sample_name + "'" + ');"  >' +
           '<a role="menuitem" tabindex="-1" href="#" onclick="sample_select(' + "'" + sample_name + "'" + ');"  >' +
           sample_name + '</a></li>');
     }
 
+    // This needs to happen after the dropdown list has been created
+    //
+    $("#dropdown-sample-list li a").click(function() {
+      $("#sample_main_text").text( $(this).text() );
+      $("#sample_main_text").val( $(this).text() );
+    });
+
   };
-  xhr.send();
+  xhr2.send();
 
   var fa_req = new XMLHttpRequest();
-  fa_req.open('GET', 'db/out_pgp174.fa', true);
+  fa_req.open('GET', 'db/pgp174_247.fa', true);
   fa_req.onloadend = function() {
-
-    g_fa_text = fa_req.responseText;
-
-    //DEBUG
-    console.log("ok!!", g_fa_text.length);
-
-
-    g_fa_array = g_fa_text.split("\n\n");
-
-    for (var i=0; i<g_fa_array.length; i++) {
-      var z = g_fa_array[i].split("\n");
+    var fa_text = fa_req.responseText;
+    var fa_array = fa_text.split("\n\n");
+    for (var i=0; i<fa_array.length; i++) {
+      var z = fa_array[i].split("\n");
       var header = z[0];
-
       var h = header.slice(1);
-      g_sequence[h] = g_fa_array[i];
-
+      g_sequence[h] = fa_array[i];
     }
   }
   fa_req.send();
+
+  var fa_req2 = new XMLHttpRequest();
+  fa_req2.open('GET', 'db/pgp174_2c5.fa', true);
+  fa_req2.onloadend = function() {
+    var fa_text = fa_req.responseText;
+    var fa_array = fa_text.split("\n\n");
+    for (var i=0; i<fa_array.length; i++) {
+      var z = fa_array[i].split("\n");
+      var header = z[0];
+      var h = header.slice(1);
+      g_sequence[h] = fa_array[i];
+    }
+  }
+  fa_req2.send();
 
 
 

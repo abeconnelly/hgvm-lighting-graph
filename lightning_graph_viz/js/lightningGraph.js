@@ -52,6 +52,9 @@ function lightningGraph() {
 
   this.call_set = {};
   this.call_set_id = {};
+
+  this.path = "none";
+  this.shift_step = 0;
 }
 
 
@@ -202,8 +205,29 @@ lightningGraph.prototype.init_graphjoin = function() {
 }
 
 lightningGraph.prototype.init = function() {
+
+  this.min_step = -1;
+  this.max_step = -1;
+  this.component = {};
+
+  this.component_pos = {};
+  this.graphjoin_line = [];
+
+  this.sequence_zoom_detail = 0.13;
+
+  this.allele_path = {};
+  this.sample_allele = {};
+  this.allele_to_sample_map = {};
+
+  this.highlight_sample_flag = false;
+  this.highlight_sample_name = "hu_test";
+
+  this.call_set = {};
+  this.call_set_id = {};
+
+
   var z = g_db.exec("select ID, sequenceRecordName, md5checksum, length from Sequence");
-  //var z = g_db.exec("select ID, sequenceRecordName, md5checksum, length from Sequence where fastaID=1");
+
   if ((z.length!=1) || (!("values" in z[0]))) {
     console.log("ERROR, didn't get expected response from DB query");
     return;
@@ -260,6 +284,7 @@ lightningGraph.prototype.init = function() {
       //component[step].push(["t", id, name, len]);
 
       // oeis A000120
+      // count of set bits (0-f)
       //
       var bc = [ 0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4 ];
       var bitcount = 0;
@@ -311,10 +336,12 @@ lightningGraph.prototype.chooseCoords = function() {
   //var shift_step = 0;
 
   // for path 2c5
-  var shift_step = 972;
+  //var shift_step = 972;
 
   // for path 247
   //var shift_step = 2746;
+
+  var shift_step = this.shift_step;
 
   var fold_size = 50;
   var tag_len = 24;
@@ -330,7 +357,8 @@ lightningGraph.prototype.chooseCoords = function() {
 
   var fudge_y = 2*this.font_size + 2*this.line_width;
 
-  var path = "2c5";
+  //var path = "2c5";
+  var path = this.path;
 
   for (var step=this.min_step; step<=this.max_step; step++) {
     if (!(step in this.component)) { continue; }

@@ -57,20 +57,41 @@
 
         <section style='position: absolute; left: 20px; top: 720px; ' ></section>
 
-        <div class='dropdown' style='position:absolute; left:20px; top:100px; z-index:999; width:100px; background-color:rgba(128,128,128,0.3);'>
+        <div class='dropdown'
+             id='loci_dropdown'
+             style='position:absolute; left:20px; top:100px; z-index:999; width:100px; background-color:rgba(128,128,128,0.3);'>
 
           <button
             class="button"
             type="button"
             data-toggle="dropdown"
             aria-expanded="true"
-            style='width:150px; background-image:none; background-color:rgba(128,128,128,0.9);' >
-              Sample Path
+            style='width:130px; background-image:none; background-color:rgba(128,128,128,0.9);' >
+              <span id='loci_main_text'>BRCA2</span>
+              <span class="caret"></span>
+          </button>
+
+          <ul class="dropdown-menu" role="menu" id='dropdown-loci-list' style='height:auto; max-height:300px; overflow-x:hidden;'>
+            <li role="presentation"><a role="menuitem" tabindex="-1" href="#" onclick="loci_select('BRCA1');"; >BRCA1</a></li>
+            <li role="presentation"><a role="menuitem" tabindex="-1" href="#" onclick="loci_select('BRCA2');"; >BRCA2</a></li>
+          </ul>
+
+        </div>
+
+
+        <div class='dropdown' style='position:absolute; left:280px; top:100px; z-index:999; width:100px; background-color:rgba(128,128,128,0.3);'>
+
+          <button
+            class="button"
+            type="button"
+            data-toggle="dropdown"
+            aria-expanded="true"
+            style='width:180px; background-image:none; background-color:rgba(128,128,128,0.9);' >
+              <span id='sample_main_text'>Sample Path</span>
               <span class="caret"></span>
           </button>
 
           <ul class="dropdown-menu" role="menu" id='dropdown-sample-list' style='height:auto; max-height:300px; overflow-x:hidden;'>
-            <!-- <li role="presentation"><a role="menuitem" tabindex="-1" href="#" onclick="g_model.unhighlight_sample();"; >None</a></li> -->
             <li role="presentation"><a role="menuitem" tabindex="-1" href="#" onclick="sample_deselect();"; >None</a></li>
           </ul>
 

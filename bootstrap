@@ -33,7 +33,8 @@ echo ""
 
 cd db
 
-./generate_tilegraph_db.sh
+./generate_tilegraph_247_db.sh
+./generate_tilegraph_2c5_db.sh
 
 cd ..
 
