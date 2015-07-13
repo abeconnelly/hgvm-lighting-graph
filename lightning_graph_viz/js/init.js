@@ -23,6 +23,9 @@ var g_db = null;
 var g_db_cache = {};
 
 
+var g_initial_sequence_loaded = false;
+var g_initial_db_loaded = false;
+
 
 function canvasFocus() {
   var c = document.getElementById("canvas");
@@ -165,12 +168,14 @@ $(document).ready( function() {
     g_db_cache["BRCA2"] = new SQL.Database(uInt8Array);
     g_db = g_db_cache["BRCA2"];
 
-    g_model.shift_step = 972;
-    g_model.path = "247";
-    g_model.init();
-
     g_loci_name = "BRCA2";
     g_controller.display_text = g_loci_name;
+
+    g_model.shift_step = 2746;
+    g_model.path = "247";
+
+    if (g_initial_sequence_loaded) { g_model.init(); }
+    g_initial_db_loaded = true;
 
 
     for (var sample_name in g_model.call_set) {
@@ -227,6 +232,11 @@ $(document).ready( function() {
       var h = header.slice(1);
       g_sequence[h] = fa_array[i];
     }
+
+    if (g_initial_db_loaded) { g_model.init(); }
+    g_initial_sequence_loaded = true;
+
+
   }
   fa_req.send();
 

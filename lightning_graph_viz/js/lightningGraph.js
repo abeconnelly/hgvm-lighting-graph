@@ -225,7 +225,6 @@ lightningGraph.prototype.init = function() {
   this.call_set = {};
   this.call_set_id = {};
 
-
   var z = g_db.exec("select ID, sequenceRecordName, md5checksum, length from Sequence");
 
   if ((z.length!=1) || (!("values" in z[0]))) {
