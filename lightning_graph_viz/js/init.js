@@ -55,7 +55,7 @@ function loop() {
   requestAnimationFrame( loop, 1 );
 }
 
-var g_loci_name = "BRCA1";
+var g_loci_name = "BRCA2";
 
 function sample_deselect() {
   g_model.unhighlight_sample();
@@ -118,10 +118,10 @@ $(document).ready( function() {
 
     g_db = g_db_cache[loci_name];
 
-    if (loci_name == "BRCA1") {
+    if (loci_name == "BRCA2") {
       g_model.shift_step = 2746;
       g_model.path = "247";
-    } else if (loci_name == "BRCA2") {
+    } else if (loci_name == "BRCA1") {
       g_model.shift_step = 972;
       g_model.path = "2c5";
     }
@@ -154,7 +154,7 @@ $(document).ready( function() {
   });
 
 
-  // Grab BRCA1 database
+  // Grab BRCA2 database
   //
   var xhr = new XMLHttpRequest();
   xhr.open('GET', 'db/tilegraph_247.sqlite3', true);
@@ -162,9 +162,17 @@ $(document).ready( function() {
   xhr.onload = function(e) {
 
     var uInt8Array = new Uint8Array(this.response);
-    g_db_cache["BRCA1"] = new SQL.Database(uInt8Array);
+    g_db_cache["BRCA2"] = new SQL.Database(uInt8Array);
+    g_db = g_db_cache["BRCA2"];
 
-    var ele = document.getElementById("dropdown-sample-list");
+    g_model.shift_step = 972;
+    g_model.path = "247";
+    g_model.init();
+
+    g_loci_name = "BRCA2";
+    g_controller.display_text = g_loci_name;
+
+
     for (var sample_name in g_model.call_set) {
       $("#dropdown-sample-list").append('<li role="presentation">' +
           '<a role="menuitem" tabindex="-1" href="#" onclick="sample_select(' + "'" + sample_name + "'" + ');"  >' +
@@ -182,7 +190,7 @@ $(document).ready( function() {
   };
   xhr.send();
 
-  // Grab BRCA2 database
+  // Grab BRCA1 database
   //
   var xhr2 = new XMLHttpRequest();
   xhr2.open('GET', 'db/tilegraph_2c5.sqlite3', true);
@@ -190,14 +198,8 @@ $(document).ready( function() {
   xhr2.onload = function(e) {
 
     var uInt8Array = new Uint8Array(this.response);
-    g_db = new SQL.Database(uInt8Array);
-    g_db_cache["BRCA2"] = g_db;
+    g_db_cache["BRCA1"] = new SQL.Database(uInt8Array);
 
-    g_model.shift_step = 972;
-    g_model.path = "247";
-    g_model.init();
-
-    var ele = document.getElementById("dropdown-sample-list");
     for (var sample_name in g_model.call_set) {
       $("#dropdown-sample-list").append('<li role="presentation">' +
           '<a role="menuitem" tabindex="-1" href="#" onclick="sample_select(' + "'" + sample_name + "'" + ');"  >' +
@@ -231,7 +233,7 @@ $(document).ready( function() {
   var fa_req2 = new XMLHttpRequest();
   fa_req2.open('GET', 'db/pgp174_2c5.fa', true);
   fa_req2.onloadend = function() {
-    var fa_text = fa_req.responseText;
+    var fa_text = fa_req2.responseText;
     var fa_array = fa_text.split("\n\n");
     for (var i=0; i<fa_array.length; i++) {
       var z = fa_array[i].split("\n");
