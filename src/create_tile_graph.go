@@ -492,10 +492,12 @@ func emit_graphjoin(ofp *bufio.Writer) {
       key := fmt.Sprintf("%x:%x", pfx_seq_id, body_seq_id)
       if _,seen := seen_hash[key]; !seen {
         if pfx_tag_id < body_id {
-          l:=fmt.Sprintf("%d,%d,%d,'FALSE',%d,%d,'TRUE'\n", gj_id, pfx_seq_id, 23, body_seq_id, len(tile_seq)-49)
+          //l:=fmt.Sprintf("%d,%d,%d,'FALSE',%d,%d,'TRUE'\n", gj_id, pfx_seq_id, 23, body_seq_id, len(tile_seq)-49)
+          l:=fmt.Sprintf("%d,%d,%d,'FALSE',%d,%d,'TRUE'\n", gj_id, pfx_seq_id, 23, body_seq_id, 0)
           ofp.Write([]byte(l))
         } else {
-          l:=fmt.Sprintf("%d,%d,%d,'TRUE',%d,%d,'FALSE'\n", gj_id, body_seq_id, len(tile_seq)-49, pfx_seq_id, 23)
+          //l:=fmt.Sprintf("%d,%d,%d,'TRUE',%d,%d,'FALSE'\n", gj_id, body_seq_id, len(tile_seq)-49, pfx_seq_id, 23)
+          l:=fmt.Sprintf("%d,%d,%d,'TRUE',%d,%d,'FALSE'\n", gj_id, body_seq_id, 0, pfx_seq_id, 23)
           ofp.Write([]byte(l))
         }
 
@@ -508,10 +510,12 @@ func emit_graphjoin(ofp *bufio.Writer) {
       key = fmt.Sprintf("%x:%x", sfx_seq_id, body_seq_id)
       if _,seen := seen_hash[key]; !seen {
         if body_id < sfx_tag_id {
-          l:=fmt.Sprintf("%d,%d,%d,'TRUE',%d,%d,'FALSE'\n", gj_id, body_seq_id, len(tile_seq)-49, sfx_seq_id, 23)
+          //l:=fmt.Sprintf("%d,%d,%d,'TRUE',%d,%d,'FALSE'\n", gj_id, body_seq_id, len(tile_seq)-49, sfx_seq_id, 23)
+          l:=fmt.Sprintf("%d,%d,%d,'FALSE',%d,%d,'TRUE'\n", gj_id, body_seq_id, len(tile_seq)-49, sfx_seq_id, 0)
           ofp.Write([]byte(l))
         } else {
-          l:=fmt.Sprintf("%d,%d,%d,'FALSE',%d,%d,'TRUE'\n", gj_id, sfx_seq_id, 23, body_seq_id, len(tile_seq)-49)
+          //l:=fmt.Sprintf("%d,%d,%d,'FALSE',%d,%d,'TRUE'\n", gj_id, sfx_seq_id, 23, body_seq_id, len(tile_seq)-49)
+          l:=fmt.Sprintf("%d,%d,%d,'TRUE',%d,%d,'FALSE'\n", gj_id, sfx_seq_id, 0, body_seq_id, len(tile_seq)-49)
           ofp.Write([]byte(l))
         }
 
